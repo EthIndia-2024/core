@@ -1,3 +1,6 @@
+//@ts-nocheck
+
+
 import { CdpAgentkit } from "@coinbase/cdp-agentkit-core";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
@@ -8,8 +11,8 @@ import * as fs from "fs";
 import * as readline from "readline";
 import { CdpTool, CdpToolkit } from "@coinbase/cdp-langchain";
 import { CheckReviewHelpfulnessInput, CalculateReviewHelpfulness } from "./checkreviewscore";
-import { CalculateIncentiveInput, CalculateIncentive } from "./incentivecalculation";
-import { GeneratePayoutJSONInput, GeneratePayoutJSON } from "./generatestructuredoutput";
+import { CalculateIncentiveInput, CalculateIncentive } from "./incentive";
+import { SavePayoutToFileInput, SavePayoutToFile } from "./savedata";
 
 dotenv.config();
 
@@ -96,9 +99,9 @@ async function initializeAgent() {
     The score ranges between 1 and 100, and the incentive is a value between 10^-6 and 10^-4.
     `;
 
-    const GENERATE_PAYOUT_JSON_PROMPT = `
-    This tool generates a structured JSON output for payout information.
-    The JSON contains the incentive amount, client wallet address, service ID.
+    const SAVE_PAYOUT_DATA_PROMPT = `
+    This tool saves the data in a structured format in the database of the company.
+    It takes inputs of client_address, incentive, and service_id and stores it on the database.
     `;
 
 
@@ -123,12 +126,12 @@ async function initializeAgent() {
       agentkit // Replace with the correct instantiation of CdpWrapper
     );
 
-    const generateJSONoutput = new CdpTool(
+    const savePayoutData = new CdpTool(
       {
-      name: "generate_payout_json",
-      description: GENERATE_PAYOUT_JSON_PROMPT,
-      argsSchema: GeneratePayoutJSONInput,
-      func: GeneratePayoutJSON,
+      name: "save_payout_data",
+      description: SAVE_PAYOUT_DATA_PROMPT,
+      argsSchema: SavePayoutToFileInput,
+      func: SavePayoutToFile,
     },
       agentkit // Replace with the correct instantiation of CdpWrapper
     );
@@ -136,7 +139,7 @@ async function initializeAgent() {
 
     tools.push(reviewHelpfulnessTool);
     tools.push(calculateIncentiveTool);
-    tools.push(generateJSONoutput);
+    tools.push(savePayoutData);
 
     // Store buffered conversation history in memory
     const memory = new MemorySaver();
@@ -149,10 +152,9 @@ async function initializeAgent() {
       checkpointSaver: memory,
       messageModifier: `
         Your purpose is to look for incoming user reviews and generate score of those reviews of how much helpful they are.
-        After calculating the score, you must calculate the incentive to pay to the reviewer based on their review score. You must also generate a
-        structured JSON output for the payout information. You have access to these tools: check_review_helpfulness,
-        calculate_incentive, and generate_payout_json. You should use them in the process. Don't generate the JSON by yourself only use the tool provided to you 
-        and strictly give the final response of generated JSON as a code block output and nothing else with it.
+        After calculating the score, you must calculate the incentive to pay to the reviewer based on their review score. You must save the 
+        payout information into the database by using the tool that you have access to. You have access to these tools: check_review_helpfulness,
+        calculate_incentive, and save_payout_data. ANd you should use them wherever needed.
         `,
     });
 
