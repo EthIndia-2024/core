@@ -8,8 +8,8 @@ import * as fs from "fs";
 import * as readline from "readline";
 import { CdpTool, CdpToolkit } from "@coinbase/cdp-langchain";
 import { CheckReviewHelpfulnessInput, CalculateReviewHelpfulness } from "./checkreviewscore";
-import { CalculateIncentiveInput, CalculateIncentive } from "./incentive";
-import { GeneratePayoutJSONInput, GeneratePayoutJSON } from "./structure";
+import { CalculateIncentiveInput, CalculateIncentive } from "./incentivecalculation";
+import { GeneratePayoutJSONInput, GeneratePayoutJSON } from "./generatestructuredoutput";
 
 dotenv.config();
 
@@ -57,7 +57,7 @@ const WALLET_DATA_FILE = "wallet_data.txt";
  *
  * @returns Agent executor and config
  */
-async function initializeAgent(messageModifier: string) {
+async function initializeAgent() {
   try {
     // Initialize LLM
     const llm = new ChatXAI({
@@ -96,6 +96,13 @@ async function initializeAgent(messageModifier: string) {
     The score ranges between 1 and 100, and the incentive is a value between 10^-6 and 10^-4.
     `;
 
+    const GENERATE_PAYOUT_JSON_PROMPT = `
+    This tool generates a structured JSON output for payout information.
+    The JSON contains the incentive amount, client wallet address, service ID.
+    `;
+
+
+
     const reviewHelpfulnessTool = new CdpTool(
       {
         name: "check_review_helpfulness",
@@ -119,9 +126,9 @@ async function initializeAgent(messageModifier: string) {
     const generateJSONoutput = new CdpTool(
       {
       name: "generate_payout_json",
-      description: CALCULATE_INCENTIVE_PROMPT,
-      argsSchema: CalculateIncentiveInput,
-      func: CalculateIncentive,
+      description: GENERATE_PAYOUT_JSON_PROMPT,
+      argsSchema: GeneratePayoutJSONInput,
+      func: GeneratePayoutJSON,
     },
       agentkit // Replace with the correct instantiation of CdpWrapper
     );
@@ -140,7 +147,13 @@ async function initializeAgent(messageModifier: string) {
       llm,
       tools,
       checkpointSaver: memory,
-      messageModifier: messageModifier,
+      messageModifier: `
+        Your purpose is to look for incoming user reviews and generate score of those reviews of how much helpful they are.
+        After calculating the score, you must calculate the incentive to pay to the reviewer based on their review score. You must also generate a
+        structured JSON output for the payout information. You have access to these tools: check_review_helpfulness,
+        calculate_incentive, and generate_payout_json. You should use them in the process. Don't generate the JSON by yourself only use the tool provided to you 
+        and strictly give the final response of generated JSON as a code block output and nothing else with it.
+        `,
     });
 
     // Save wallet data
@@ -279,43 +292,34 @@ async function chooseMode(): Promise<"chat" | "auto"> {
 /**
  * Start the chatbot agent
  */
-async function main(userReview: string) {
+async function main(userReview: string, clientWallet: string, serviceId: string){
   try {
-    const messageModifier = `
-        You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. You are 
-        empowered to interact onchain using your tools. If you ever need funds, you can request them from the 
-        faucet if you are on network ID 'base-sepolia'. If not, you can provide your wallet details and request 
-        funds from the user. Before executing your first action, get the wallet details to see what network 
-        you're on. If there is a 5XX (internal) HTTP error code, ask the user to try again later. If someone 
-        asks you to do something you can't do with your currently available tools, you must say so, and 
-        encourage them to implement it themselves using the CDP SDK + Agentkit, recommend they go to 
-        docs.cdp.coinbase.com for more information. Be concise and helpful with your responses. Refrain from 
-        restating your tools' descriptions unless it is explicitly requested.
-        `;
-    const { agent, config } = await initializeAgent(messageModifier);
-    console.log(agent, config);
+    
+    const { agent, config } = await initializeAgent();
+    const UserData = "The user_review is: " + userReview + " The client_wallet is: " + clientWallet + " The service_id is: " + serviceId;
     // const mode = await chooseMode();
-    runChatMode(agent, config);
+    // runChatMode(agent, config);
 
-    // // if (mode === "chat") {
-    // //   await runChatMode(agent, config);
-    // // } else {
-    // //   await runAutonomousMode(agent, config);
-    // // }
-    const userInput = "The review is :"+ userReview;
-    const stream = await agent.stream({ messages: [new HumanMessage(userInput)] }, config);
-    // console.log(stream);
-
-    // for await (const chunk of stream) {
-    //   if ("agent" in chunk) {
-    //     console.log(chunk.agent.messages[0].content);
-    //   } else if ("tools" in chunk) {
-    //     console.log(chunk.tools.messages[0].content);
-    //   }
-    //   console.log("-------------------");
+    // if (mode === "chat") {
+    //   await runChatMode(agent, config);
+    // } else {
+    //   await runAutonomousMode(agent, config);
     // }
+    const stream = await agent.stream({ messages: [new HumanMessage(UserData)] }, config);
 
-    return "1";
+    let output = "";
+    for await (const chunk of stream) {
+      if ("agent" in chunk) {
+        console.log(chunk.agent.messages[0].content);
+        output += chunk.agent.messages[0].content;
+      } else if ("tools" in chunk) {
+        console.log(chunk.tools.messages[0].content);
+        output += chunk.tools.messages[0].content;
+      }
+      console.log("-------------------");
+    // }
+    }
+    return output;
     
   } catch (error) {
     if (error instanceof Error) {
@@ -327,10 +331,10 @@ async function main(userReview: string) {
 
 export { main };
 
-// if (require.main === module) {
-//   console.log("Starting Agent...");
-//   main().catch(error => {
-//     console.error("Fatal error:", error);
-//     process.exit(1);
-//   });
-// }
+if (require.main === module) {
+  console.log("Starting Agent...");
+  main("This is such a good product.", "0x88C5553e7712a9c8130D798e44EbF8Cc62f136d6", "Amazon123").catch(error => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  });
+}
