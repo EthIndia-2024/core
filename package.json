@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ethereum-attestation-service/eas-sdk": "^2.7.0",
     "@lit-protocol/auth-helpers": "^7.0.0",
     "@lit-protocol/constants": "^7.0.0",
     "@lit-protocol/contracts": "^0.0.74",

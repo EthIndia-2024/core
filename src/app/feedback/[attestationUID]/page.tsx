@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,18 +14,18 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppKitProvider, useAppKitAccount } from "@reown/appkit/react";
-import {
-  Wallet,
-  Star,
-  Send,
-  ChevronRight,
-} from "lucide-react";
+import { Wallet, Star, Send, ChevronRight } from 'lucide-react';
 import { toast } from "react-hot-toast";
 import { ethers } from 'ethers';
 import contractABI from "@/contract/abi.json";
 import contractAddress from "@/contract/address.json";
 import { pinata } from "@/utils/config";
 import { decodeUint32ToString, convertStringToUint32 } from "@/utils/ipfs";
+import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
+
+const EASContractAddress = "0x4200000000000000000000000000000000000021";
+const SchemaUID = "0x0353438abb8fc94491aa6c3629823c9ddcd0d7b28df6aa9a5281bbb5ff3bb6bb";
+const RPC_URL = "https://sepolia.base.org";
 
 interface ServiceData {
   name: string;
@@ -35,25 +33,15 @@ interface ServiceData {
   feedbackQuestions: string[];
 }
 
-const domain = {
-  name: "PrivateFeedback",
-  version: "1",
-  chainId: 23295,
-  verifyingContract: contractAddress.address,
-};
-
-const types = {
-  Feedback: [
-    { name: "user", type: "address" },
-    { name: "serviceId", type: "uint256" },
-    { name: "timestamp", type: "uint256" },
-    { name: "feedback_p1", type: "uint256" },
-    { name: "feedback_p2", type: "uint256" },
-  ],
-};
+interface FeedbackData {
+  service: string;
+  ratings: number[];
+  overallRating: number;
+  remarks: string;
+}
 
 export default function MagicLinkFeedback() {
-  const [step, setStep] = useState("connect");
+  const [step, setStep] = useState<"connect" | "feedback" | "submitted">("connect");
   const [serviceData, setServiceData] = useState<ServiceData | null>(null);
   const [ratings, setRatings] = useState<number[]>([]);
   const [overallRating, setOverallRating] = useState(0);
@@ -64,7 +52,6 @@ export default function MagicLinkFeedback() {
 
   useEffect(() => {
     if (isConnected) {
-      window.ethereum = sapphire.wrap(window.ethereum);
       verifyUser();
     }
   }, [isConnected]);
@@ -77,55 +64,79 @@ export default function MagicLinkFeedback() {
 
   const getContract = async () => {
     try {
-      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await ethersProvider.getSigner();
+      const ethersProvider = new ethers.JsonRpcProvider(RPC_URL);
       const contractRead = new ethers.Contract(
         contractAddress.address,
         contractABI,
         ethersProvider
       );
-      const contractWrite = new ethers.Contract(
-        contractAddress.address,
-        contractABI,
-        signer
-      )
-      return {contractRead, contractWrite};
+      return { contractRead };
     } catch (error) {
-      toast.error("Failed to fetch contract: " + error.message);
+      console.error("Failed to fetch contract:", error);
+      toast.error("Failed to fetch contract. Please try again.");
       throw error;
     }
   };
 
-  const fetchService = async () => {
+  const fetchService = async (serviceId: bigint) => {
     try {
-      const {contractRead, contractWrite} = await getContract();
-      const serviceId = BigInt(params.service);
+      const { contractRead } = await getContract();
       const serviceMetaData = await contractRead.getServiceMetadata(serviceId);
-      const IpfsHash = decodeUint32ToString(
-        BigInt(serviceMetaData[0]),
-        BigInt(serviceMetaData[1])
-      );
+      const IpfsHash = serviceMetaData;
       const ipfsUrl = await pinata.gateways.convert(IpfsHash);
       const response = await fetch(ipfsUrl);
       const data = await response.json();
       setServiceData(data);
     } catch (error) {
-      toast.error("Failed to fetch service: " + error.message);
+      console.error("Failed to fetch service:", error);
+      toast.error("Failed to fetch service. Please try again.");
+    }
+  };
+
+  const getAttestation = async () => {
+    try {
+      const attestationUID = params.attestationUID as string;
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const eas = new EAS(EASContractAddress);
+      eas.connect(provider);
+
+      const attestation = await eas.getAttestation(attestationUID);
+      return attestation;
+    } catch (error) {
+      console.error("Failed to retrieve attestation:", error);
+      toast.error("Failed to retrieve attestation. Please try again.");
+      throw error;
     }
   };
 
   const verifyUser = async () => {
-    if (address.toLowerCase() !== params.user.toLowerCase()) {
-      toast.error("Please connect with the correct wallet address.");
-      return;
+    try {
+      const attestation = await getAttestation();
+      if (address.toLowerCase() !== attestation.recipient.toLowerCase()) {
+        toast.error("Please connect with the correct wallet address!");
+        return;
+      }
+      const serviceId = await getServiceId(attestation);
+      await fetchFeedbackForm(serviceId);
+      setStep("feedback");
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      toast.error("Failed to verify user. Please try again.");
     }
-    await fetchFeedbackForm();
-    setStep("feedback");
   };
 
-  const fetchFeedbackForm = async () => {
+  const getServiceId = async (attestation: any) => {
+    const schemaEncoder = new SchemaEncoder("uint256 service_id");
+    const decodedData = schemaEncoder.decodeData(attestation.data);
+    const serviceId = BigInt(decodedData[0].value.value.toString());
+    // console.log(decodedData);
+    // const serviceId = BigInt(attestation.data);
+    return serviceId;
+  };
+
+  const fetchFeedbackForm = async (serviceId: bigint) => {
     await toast.promise(
-      fetchService(),
+      fetchService(serviceId),
       {
         loading: 'Loading feedback form...',
         success: 'Feedback form loaded successfully',
@@ -140,90 +151,22 @@ export default function MagicLinkFeedback() {
     setRatings(newRatings);
   };
 
-  const uploadFeedbackToIPFS = async (feedbackData) => {
-    return toast.promise(
-      fetch("/api/service", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(feedbackData),
-      }).then(response => response.json()),
-      {
-        loading: 'Uploading feedback to IPFS...',
-        success: 'Feedback uploaded to IPFS successfully',
-        error: 'Failed to upload feedback to IPFS',
-      }
-    );
-  };
-
-  interface FeedbackPageProps {
-    service: string;
-    user: string;
-  }
-
-  const signMessage = async (ipfsUrl: string, props: FeedbackPageProps) => {
-    let obj = { part1: "", part2: "" };
-    convertStringToUint32(ipfsUrl, obj);
-    const serviceId = BigInt(params.service);
-
-    try {
-      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await ethersProvider.getSigner();
-      const {contractRead, contractWrite} = await getContract();
-      const timestamp = Math.floor(Date.now() / 1000);
-
-      const feedback = {
-        user: signer.address,
-        serviceId: serviceId,
-        timestamp: timestamp,
-        feedback_p1: obj.part1,
-        feedback_p2: obj.part2,
-      };
-
-      return toast.promise(
-        (async () => {
-          const signature = await signer.signTypedData(
-            domain,
-            types,
-            feedback
-          );
-          const splitSig = ethers.Signature.from(signature);
-          const tx = await contractWrite.submitFeedback(
-            BigInt(serviceId),
-            splitSig.v,
-            splitSig.r,
-            splitSig.s,
-            BigInt(timestamp),
-            BigInt(obj.part1),
-            BigInt(obj.part2)
-          );
-          await tx.wait();
-        })(),
-        {
-          loading: "Submitting your feedback to the contract...",
-          success: "Feedback submitted successfully!",
-          error: "Failed to submit feedback to the contract",
-        }
-      );
-    } catch (error) {
-      toast.error("Error during submission: " + error.message);
-      throw error;
-    }
-  };
-
   const handleSubmit = async () => {
-    const feedbackData = {
-      service: params.service,
+    const feedbackData: FeedbackData = {
+      service: await getServiceId(await getAttestation()),
       ratings,
       overallRating,
       remarks,
     };
 
     try {
-      const ipfsUrl = await uploadFeedbackToIPFS(feedbackData);
-      await signMessage(ipfsUrl);
+      console.log(feedbackData);
+      // TODO: Implement sending feedback to AI Agent
       setStep("submitted");
+      toast.success("Feedback submitted successfully!");
     } catch (error) {
-      console.error(error);
+      console.error("Error submitting feedback:", error);
+      toast.error("Failed to submit feedback. Please try again.");
     }
   };
 
@@ -403,3 +346,4 @@ export default function MagicLinkFeedback() {
     </div>
   );
 }
+
