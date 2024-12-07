@@ -9,7 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coinbase/cdp-agentkit-core": "^0.0.7",
+    "@coinbase/cdp-langchain": "^0.0.8",
     "@ethereum-attestation-service/eas-sdk": "^2.7.0",
+    "@langchain/core": "^0.3.22",
+    "@langchain/langgraph": "^0.2.27",
+    "@langchain/openai": "^0.3.14",
+    "@langchain/xai": "^0.0.1",
     "@lit-protocol/auth-helpers": "^7.0.0",
     "@lit-protocol/constants": "^7.0.0",
     "@lit-protocol/contracts": "^0.0.74",
@@ -35,6 +41,7 @@
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "compromise": "^14.14.3",
     "encoding": "^0.1.13",
     "ethers": "^6.13.4",
     "framer-motion": "^11.11.9",
@@ -51,7 +58,8 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.21.32",
-    "wagmi": "^2.12.20"
+    "wagmi": "^2.12.20",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
