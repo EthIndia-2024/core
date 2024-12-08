@@ -13,6 +13,7 @@ import { CdpTool, CdpToolkit } from "@coinbase/cdp-langchain";
 import { CheckReviewHelpfulnessInput, CalculateReviewHelpfulness } from "./checkreviewscore";
 import { CalculateIncentiveInput, CalculateIncentive } from "./incentive";
 import { SavePayoutToFileInput, SavePayoutToFile } from "./savedata";
+import { summarizer } from "./summarization";
 
 dotenv.config();
 
@@ -307,6 +308,7 @@ async function main(userReview: string, userAddress: string, serviceId: string){
     // } else {
     //   await runAutonomousMode(agent, config);
     // }
+    const summary = await summarizer(userReview);
     const stream = await agent.stream({ messages: [new HumanMessage(UserData)] }, config);
 
     let output = "";
@@ -321,7 +323,7 @@ async function main(userReview: string, userAddress: string, serviceId: string){
       console.log("-------------------");
     // }
     }
-    return output;
+    return summary;
     
   } catch (error) {
     if (error instanceof Error) {
