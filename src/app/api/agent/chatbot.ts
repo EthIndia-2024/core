@@ -294,11 +294,11 @@ async function chooseMode(): Promise<"chat" | "auto"> {
 /**
  * Start the chatbot agent
  */
-async function main(userReview: string, clientWallet: string, serviceId: string){
+async function main(userReview: string, userAddress: string, serviceId: string){
   try {
     
     const { agent, config } = await initializeAgent();
-    const UserData = "The user_review is: " + userReview + " The client_wallet is: " + clientWallet + " The service_id is: " + serviceId;
+    const UserData = "The user_review is: " + userReview + " The userAddress is: " + userAddress + " The service_id is: " + serviceId;
     // const mode = await chooseMode();
     // runChatMode(agent, config);
 
@@ -333,10 +333,10 @@ async function main(userReview: string, clientWallet: string, serviceId: string)
 
 export { main };
 
-if (require.main === module) {
-  console.log("Starting Agent...");
-  main("This is such a good product.", "0x88C5553e7712a9c8130D798e44EbF8Cc62f136d6", "Amazon123").catch(error => {
-    console.error("Fatal error:", error);
-    process.exit(1);
-  });
-}
+// if (require.main === module) {
+//   console.log("Starting Agent...");
+//   main("This is such a good product.", "0x88C5553e7712a9c8130D798e44EbF8Cc62f136d6", "Amazon123").catch(error => {
+//     console.error("Fatal error:", error);
+//     process.exit(1);
+//   });
+// }

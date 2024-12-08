@@ -142,8 +142,7 @@ export default function Dashboard() {
         const response = await fetch(ipfsUrl)
         const data = await response.json()
         const feedbacks = await contractRead.getTotalFeedbacks(BigInt(serviceId))
-        // const interactions = await contractRead.getTotalInteractions(BigInt(serviceId))
-        const interactions = 100;
+        const interactions = await contractRead.getTotalInteractions(BigInt(serviceId))
         return {
           id: serviceId.toString(),
           ipfsUrl: ipfsUrl,

@@ -154,15 +154,22 @@ export default function MagicLinkFeedback() {
   };
 
   const handleSubmit = async () => {
-    const feedbackData: FeedbackData = {
-      service: await getServiceId(await getAttestation()),
+    const feedbackData = {
       ratings,
       overallRating,
       remarks,
+      attestationUID: params.attestationUID as string,
     };
 
     try {
       console.log(feedbackData);
+        await fetch('/api/agent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(feedbackData),
+        });
       // TODO: Implement sending feedback to AI Agent
       setStep("submitted");
       toast.success("Feedback submitted successfully!");

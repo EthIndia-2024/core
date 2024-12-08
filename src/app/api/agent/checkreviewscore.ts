@@ -39,10 +39,10 @@ async function CalculateReviewHelpfulness(wallet: Wallet, args: z.infer<typeof C
       "communication", "setup", "disappointed", "frustrated", "annoyed",
       "confused", "unclear", "hard to use", "not satisfied"
     ];
-    const actionabilityScore = actionableKeywords.some(keyword => args.reviewText.toLowerCase().includes(keyword)) ? 100 : 50;
+    const actionabilityScore = actionableKeywords.some(keyword => args.reviewText.toLowerCase().includes(keyword)) ? 100 : 10;
   
     // Specificity score (based on noun phrases)
-    const specificityScore = doc.nouns().out('array').length > 2 ? 100 : 50;
+    const specificityScore = doc.nouns().out('array').length > 2 ? 100 : 10;
   
     // Length adequacy score
     const length = args.reviewText.split(" ").length;

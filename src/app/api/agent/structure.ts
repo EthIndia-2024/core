@@ -5,9 +5,9 @@ const GeneratePayoutJSONInput = z.object({
   incentive: z
     .string()
     .describe("The incentive amount as a string, typically between 10^-6 and 10^-4."),
-  clientWallet: z
+    userAddress: z
     .string()
-    .describe("The wallet address of the client."),
+    .describe("The wallet address of the user."),
   serviceId: z
     .string()
     .describe("The unique identifier for the service."),
@@ -18,7 +18,7 @@ const GeneratePayoutJSONInput = z.object({
  *
  * @param wallet - The wallet parameter is included for consistency but not used in this function.
  * @param incentive - The incentive amount as a string.
- * @param clientWallet - The wallet address of the client.
+ * @param userAddress - The wallet address of the client.
  * @param serviceId - The unique identifier for the service.
  * @returns A JSON string containing the payout information.
  */
@@ -28,7 +28,7 @@ async function GeneratePayoutJSON(
 ): Promise<string> {
   const payoutJSON = {
     incentive: args.incentive,
-    clientWallet: args.clientWallet,
+    userAddress: args.userAddress,
     serviceId: args.serviceId,
     timestamp: new Date().toISOString(), // Add timestamp for record-keeping
   };
