@@ -17,7 +17,7 @@ export default function ErrorPage() {
     <div className="min-h-screen bg-white text-black">
       <header className="px-6 py-4 bg-black text-white">
         <div className="container mx-auto">
-          <h1 className="text-2xl font-bold">PrivateFeedback</h1>
+          <h1 className="text-2xl font-bold">Mumei</h1>
         </div>
       </header>
 

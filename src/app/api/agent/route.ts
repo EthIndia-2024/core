@@ -1,8 +1,9 @@
+//@ts-nocheck
+
 import { NextResponse, NextRequest } from "next/server";
 import { main } from "./chatbot";
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from "ethers";
-import {addPayoutData} from "./mongo";
 const EASContractAddress = "0x4200000000000000000000000000000000000021";
 const SchemaUID = "0x0353438abb8fc94491aa6c3629823c9ddcd0d7b28df6aa9a5281bbb5ff3bb6bb";
 const RPC_URL = "https://sepolia.base.org";
@@ -48,7 +49,9 @@ export async function POST(request: NextRequest) {
     const serviceId = await getServiceId(attestation);
 
     // const result = await addPayoutData(payout);
-    const r = await main(data.remarks, user, Number(serviceId));
+    const r = await main(data.remarks, user, serviceId);
+
+    console.log("Summary: ", r);
 
     // // // This triggers the function from chatbot
     if (r) {

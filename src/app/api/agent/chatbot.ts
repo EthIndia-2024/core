@@ -14,6 +14,11 @@ import { CheckReviewHelpfulnessInput, CalculateReviewHelpfulness } from "./check
 import { CalculateIncentiveInput, CalculateIncentive } from "./incentive";
 import { SavePayoutToFileInput, SavePayoutToFile } from "./savedata";
 import { summarizer } from "./summarization";
+import contractABI from "@/contract/abi.json";
+import contractAddress from "@/contract/address.json";
+const { ethers } = require("ethers");
+
+const RPC_URL = "https://sepolia.base.org";
 
 dotenv.config();
 

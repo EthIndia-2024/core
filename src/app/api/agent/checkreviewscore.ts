@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Wallet } from "@coinbase/coinbase-sdk";
 import { z } from "zod";
 import nlp from 'compromise';

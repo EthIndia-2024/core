@@ -20,8 +20,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Oasis Company",
-  description: "Generated during the Oasis p4w3 Hackathon",
+  title: "Mumei",
+  description: "Hi there",
 };
 
 export default function RootLayout({

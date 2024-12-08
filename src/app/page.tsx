@@ -13,16 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Lock,
-  Shield,
-  UserCheck,
-  Zap,
-  Mail,
-  Star,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowRight, Lock, Shield, UserCheck, Zap, Mail, Star, ChevronRight, Eye, Award } from 'lucide-react';
 import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
 import { useRouter } from "next/navigation";
 
@@ -86,7 +77,7 @@ export default function LandingPage() {
           <Link className="flex items-center justify-center" href="#">
             <Lock className="h-8 w-8 text-black" />
             <span className="ml-2 text-3xl font-bold text-black">
-              PrivateFeedback
+              Mumei
             </span>
           </Link>
           <nav className="hidden md:flex space-x-8">
@@ -125,14 +116,13 @@ export default function LandingPage() {
                 className="text-5xl md:text-7xl font-bold mb-6"
                 variants={fadeIn}
               >
-                Secure, Private, and Verified Feedback
+                Private Feedback for Web3 Companies
               </motion.h1>
               <motion.p
                 className="text-xl md:text-2xl text-gray-600 mb-12"
                 variants={fadeIn}
               >
-                Empower your business with blockchain-verified user interactions
-                and anonymous feedback using our cutting-edge SDK.
+                Empower your business with privacy-preserving feedback collection and reward distribution using our innovative SDK.
               </motion.p>
               <motion.div variants={fadeIn}>
                 <Button onClick={handleGetStarted} className="text-lg px-8 py-4 rounded-full bg-black text-white hover:bg-white hover:text-black border-2 border-black transition-all duration-300">
@@ -162,21 +152,21 @@ export default function LandingPage() {
               {[
                 {
                   icon: Shield,
-                  title: "Secure Integration",
-                  description:
-                    "Easily integrate our SDK to verify user interactions on the blockchain, ensuring authenticity and trust.",
-                },
-                {
-                  icon: Lock,
                   title: "Privacy-First Feedback",
                   description:
-                    "End-to-end encrypted feedback that's untraceable to individual users, protecting privacy while providing valuable insights.",
+                    "Collect user feedback without ever disclosing their identity, ensuring complete privacy and anonymity.",
                 },
                 {
-                  icon: Zap,
-                  title: "Streamlined User Flow",
+                  icon: Eye,
+                  title: "Debiased Insights",
                   description:
-                    "Simple 5-step process from interaction to reward, ensuring high engagement and completion rates.",
+                    "Our AI agent provides actionable insights from feedback while maintaining user privacy.",
+                },
+                {
+                  icon: Award,
+                  title: "Fair Reward System",
+                  description:
+                    "Distribute rewards based on feedback usefulness, calculated by our AI in a privacy-preserving manner.",
                 },
               ].map((feature, index) => (
                 <motion.div
@@ -223,7 +213,7 @@ export default function LandingPage() {
                   1
                 </div>
                 <h3 className="mt-4 text-xl font-bold text-black">
-                  Interact with Service
+                  User Interaction
                 </h3>
                 <p className="mt-2 text-gray-600">
                   Users engage with your service or product.
@@ -237,10 +227,10 @@ export default function LandingPage() {
                   2
                 </div>
                 <h3 className="mt-4 text-xl font-bold text-black">
-                  Prove Interaction
+                  Interaction Attestation
                 </h3>
                 <p className="mt-2 text-gray-600">
-                  Interaction is verified and recorded on the blockchain.
+                  Company verifies and attests to the user's interaction.
                 </p>
               </motion.div>
               <motion.div
@@ -251,10 +241,10 @@ export default function LandingPage() {
                   3
                 </div>
                 <h3 className="mt-4 text-xl font-bold text-black">
-                  Receive Magic Link
+                  Feedback Submission
                 </h3>
                 <p className="mt-2 text-gray-600">
-                  User receives a secure magic link via encrypted email.
+                  User receives an email prompt to submit private feedback.
                 </p>
               </motion.div>
               <motion.div
@@ -265,10 +255,10 @@ export default function LandingPage() {
                   4
                 </div>
                 <h3 className="mt-4 text-xl font-bold text-black">
-                  Submit Feedback
+                  AI Processing
                 </h3>
                 <p className="mt-2 text-gray-600">
-                  User provides anonymous feedback through the secure link.
+                  Feedback is processed by our AI for usefulness and reward calculation.
                 </p>
               </motion.div>
               <motion.div
@@ -279,10 +269,10 @@ export default function LandingPage() {
                   5
                 </div>
                 <h3 className="mt-4 text-xl font-bold text-black">
-                  Get Rewarded
+                  Reward Distribution
                 </h3>
                 <p className="mt-2 text-gray-600">
-                  Users receive rewards for their valuable feedback.
+                  Rewards are aggregated and distributed privately to users.
                 </p>
               </motion.div>
             </div>
@@ -305,8 +295,7 @@ export default function LandingPage() {
                 Ready to Revolutionize Your Feedback System?
               </motion.h2>
               <motion.p className="text-xl mb-12" variants={fadeIn}>
-                Join the future of secure, private, and verified user feedback.
-                Get started with PrivateFeedback today!
+                Join the future of private, debiased, and rewarded user feedback. Get started with Mumei today!
               </motion.p>
               <motion.div variants={fadeIn}>
                 <Button onClick={handleGetStarted} className="text-lg px-8 py-4 rounded-full bg-white text-black hover:bg-gray-200 transition-all duration-300">
@@ -326,7 +315,7 @@ export default function LandingPage() {
       >
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 mb-4 md:mb-0">
-            © 2024 PrivateFeedback. All rights reserved.
+            © 2024 Mumei. All rights reserved.
           </p>
           <nav className="flex gap-6">
             <Link
@@ -347,3 +336,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

@@ -238,7 +238,7 @@ export default function Dashboard() {
     <div className="flex flex-col min-h-screen bg-white text-black">
       <header className="px-6 py-4 bg-black text-white">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">PrivateFeedback</h1>
+          <h1 className="text-2xl font-bold">Mumei</h1>
           <nav className="flex space-x-2">
             <Button variant="ghost" className="text-white hover:text-black">Services</Button>
             <Button variant="ghost" className="text-white hover:text-black">Analytics</Button>

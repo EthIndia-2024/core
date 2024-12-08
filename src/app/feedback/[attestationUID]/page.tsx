@@ -193,7 +193,7 @@ export default function MagicLinkFeedback() {
             transition={{ duration: 0.5 }}
             className="text-xl font-bold"
           >
-            PrivateFeedback
+            Mumei
           </motion.div>
           <w3m-button size="sm" />
         </div>
