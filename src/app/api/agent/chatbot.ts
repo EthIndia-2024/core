@@ -100,7 +100,7 @@ async function initializeAgent() {
     `;
 
     const SAVE_PAYOUT_DATA_PROMPT = `
-    This tool saves the data in a structured format in the database of the company.
+    This tool saves the data in a structured format in the database of the company and performs the transaction on the blockchain by invoking a contract.
     It takes inputs of client_address, incentive, and service_id and stores it on the database.
     `;
 

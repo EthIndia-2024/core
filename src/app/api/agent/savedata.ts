@@ -20,7 +20,7 @@ const SavePayoutToFileInput = z.object({
 });
 
 /**
- * Save the payout information to a local file.
+ * Save the payout information to a local file and perform the transaction on the blockchain.
  *
  * @param wallet - The wallet parameter is included for consistency but not used in this function.
  * @param incentive - The incentive amount as a string.
@@ -28,7 +28,7 @@ const SavePayoutToFileInput = z.object({
  * @param serviceId - The unique identifier for the service.
  * @returns A success message or an error if saving fails.
  */
-async function SavePayoutToFile(
+async function SavePayoutToFileAndPerformTransaction(
   wallet: Wallet,
   args: z.infer<typeof SavePayoutToFileInput>
 ): Promise<string> {
@@ -38,19 +38,10 @@ async function SavePayoutToFile(
     serviceId: args.serviceId,
   };
 
-  const invocation = await wallet.invokeContract({
-    contractAddress: contractAddress.address,
-    abi: contractABI,
-    method: "attestInteraction",
-    args: [args.userAddress, args.serviceId],
-    assetId: "eth",
-  })
-
-  await invocation.wait();
-
-  console.log(invocation);
+//   console.log(invocation);
   // Default file path
   const outputPath = path.resolve("payouts.json");
+  
 
   try {
     // Check if file exists
@@ -66,9 +57,19 @@ async function SavePayoutToFile(
     // Save updated data back to file
     fs.writeFileSync(outputPath, JSON.stringify(existingData, null, 2), "utf8");
 
-    return `Payout successfully saved to ${outputPath}`;
+    const invocation = await wallet.invokeContract({
+        contractAddress: contractAddress.address,
+        abi: contractABI,
+        method: "attestInteraction",
+        args: [args.userAddress, args.serviceId],
+        assetId: "eth",
+      })
+    
+    await invocation.wait();
+
+    return `Payout successfully saved to ${outputPath} and transaction completed`;
   } catch (error) {
-    throw new Error(`Failed to save payout to file: ${error.message}`);
+    throw new Error(`Failed to save payout to file or transaction failed: ${error.message}`);
   }
 }
 
