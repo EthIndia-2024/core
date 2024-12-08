@@ -6,6 +6,11 @@ import fs from "fs";
 import path from "path";
 import contractABI from "@/contract/abi.json";
 import contractAddress from "@/contract/address.json";
+const { ethers } = require("ethers");
+
+const RPC_URL = "https://sepolia.base.org";
+
+let payouts = [];
 
 const SavePayoutToFileInput = z.object({
   incentive: z
@@ -28,7 +33,7 @@ const SavePayoutToFileInput = z.object({
  * @param serviceId - The unique identifier for the service.
  * @returns A success message or an error if saving fails.
  */
-async function SavePayoutToFileAndPerformTransaction(
+async function SavePayoutToFile(
   wallet: Wallet,
   args: z.infer<typeof SavePayoutToFileInput>
 ): Promise<string> {
@@ -38,39 +43,52 @@ async function SavePayoutToFileAndPerformTransaction(
     serviceId: args.serviceId,
   };
 
-//   console.log(invocation);
-  // Default file path
-  const outputPath = path.resolve("payouts.json");
+  // payouts.push(payoutData);
+  // console.log("payouts: ", payouts);
+
+  // if(payouts.length >= 2) {
+
+  // TODO ALWAYS EXECUTE
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    const contract = new ethers.Contract(contractAddress.address, contractABI, signer);
+
+    const amount = ethers.parseEther(payoutData.incentive);
+    console.log("amount: ", amount);
+    const tx = await contract.attestRewardAndPay(payoutData.userAddress, amount, { value: amount });
+    await tx.wait();
+    console.log("Transaction hash: ", tx.hash);
+    // }
+
+    // payouts = [];
+  // }
+
+// //   console.log(invocation);
+//   // Default file path
+//   const outputPath = path.resolve("payouts.json");
   
 
-  try {
-    // Check if file exists
-    let existingData: Array<{ incentive: string; userAddress: string; serviceId: string; }> = [];
-    if (fs.existsSync(outputPath)) {
-      const fileContent = fs.readFileSync(outputPath, "utf8");
-      existingData = JSON.parse(fileContent); // Parse existing data
-    }
+//   try {
+//     // Check if file exists
+//     let existingData: Array<{ incentive: string; userAddress: string; serviceId: string; }> = [];
+//     if (fs.existsSync(outputPath)) {
+//       const fileContent = fs.readFileSync(outputPath, "utf8");
+//       existingData = JSON.parse(fileContent); // Parse existing data
+//     }
 
-    // Append the new payout
-    existingData.push(payoutData);
+//     // Append the new payout
+//     existingData.push(payoutData);
 
-    // Save updated data back to file
-    fs.writeFileSync(outputPath, JSON.stringify(existingData, null, 2), "utf8");
+//     // Save updated data back to file
+//     fs.writeFileSync(outputPath, JSON.stringify(existingData, null, 2), "utf8");
 
-    const invocation = await wallet.invokeContract({
-        contractAddress: contractAddress.address,
-        abi: contractABI,
-        method: "attestInteraction",
-        args: [args.userAddress, args.serviceId],
-        assetId: "eth",
-      })
-    
-    await invocation.wait();
+//     console.log("Payout data saved to file:");
 
-    return `Payout successfully saved to ${outputPath} and transaction completed`;
-  } catch (error) {
-    throw new Error(`Failed to save payout to file or transaction failed: ${error.message}`);
-  }
+
+//     return `Payout successfully saved to ${outputPath} and transaction completed`;
+//   } catch (error) {
+//     throw new Error(`Failed to save payout to file or transaction failed: ${error.message}`);
+//   }
 }
 
 export { SavePayoutToFileInput, SavePayoutToFile };

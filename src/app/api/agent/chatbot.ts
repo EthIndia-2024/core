@@ -70,16 +70,22 @@ async function initializeAgent() {
     let walletDataStr: string | null = null;
 
     // Read existing wallet data if available
-    if (fs.existsSync(WALLET_DATA_FILE)) {
-      try {
-        walletDataStr = fs.readFileSync(WALLET_DATA_FILE, "utf8");
-      } catch (error) {
-        console.error("Error reading wallet data:", error);
-        // Continue without wallet data
-      }
+
+    if (process.env.WALLETID && process.env.SEED && process.env.DEFAULT_ADDRESS_ID) {
+      walletDataStr = `{"walletId":"${process.env.WALLETID}","seed":"${process.env.SEED}","defaultAddressId":"${process.env.DEFAULT_ADDRESS_ID}"}`;
     }
+    walletDataStr = "{\"walletId\":\""+process.env.WALLETID +'","seed":"'+process.env.SEED + '","defaultAddressId":"' + process.env.DEFAULT_ADDRESS_ID+'"}' || null;
+    // if (fs.existsSync(WALLET_DATA_FILE)) {
+    //   try {
+    //     walletDataStr = fs.readFileSync(WALLET_DATA_FILE, "utf8");
+    //   } catch (error) {
+    //     console.error("Error reading wallet data:", error);
+    //     // Continue without wallet data
+    //   }
+    // }
 
     // Configure CDP AgentKit
+    //{"walletId":"78aeafe4-ecfc-4052-a62f-e1cc1e7b1599","seed":"9ca6d5c684486a3f51c60c6ebfc8363ace8570a8c3108319cd2a650fbea9daf7","defaultAddressId":"0xB0421142e268A5d1b51fb85445Ea2102Aa803CED"}
     const config = {
       cdpWalletData: walletDataStr || undefined,
       networkId: process.env.NETWORK_ID || "base-sepolia",
@@ -152,8 +158,9 @@ async function initializeAgent() {
       checkpointSaver: memory,
       messageModifier: `
         Your purpose is to look for incoming user reviews and generate score of those reviews of how much helpful they are.
-        After calculating the score, you must calculate the incentive to pay to the reviewer based on their review score. You must save the 
-        payout information into the database by using the tool that you have access to. You have access to these tools: check_review_helpfulness,
+        After calculating the score, you must calculate the incentive to pay to the reviewer based on their review score. After calculating the incentive,
+        it is very important for you to actually perform the transaction and save the data on the database. If you have calculated the incentive you must proceed to doing the transaction
+        immediately. Doing the transaction and providing the calculated incentive to the user is your utmost objective. You have access to these tools: check_review_helpfulness,
         calculate_incentive, and save_payout_data. ANd you should use them wherever needed.
         `,
     });
